@@ -37,6 +37,8 @@ const Applications: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<Application['status'] | 'all'>('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -103,7 +105,26 @@ const Applications: React.FC = () => {
     const matchesSearch = app.companyName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          app.jobTitle.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    
+    let matchesDate = true;
+    if (app.appliedDate) {
+      const appDate = app.appliedDate.seconds 
+        ? new Date(app.appliedDate.seconds * 1000) 
+        : new Date(app.appliedDate);
+      
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (appDate < start) matchesDate = false;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (appDate > end) matchesDate = false;
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const statusColors = {
@@ -187,7 +208,7 @@ const Applications: React.FC = () => {
             className="w-full pl-12 pr-4 py-4 bg-white border border-charcoal/5 rounded-2xl focus:ring-2 focus:ring-terracotta/50 outline-none transition-all shadow-sm"
           />
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <div className="relative flex-1 lg:w-48">
             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-warm-gray" size={20} />
             <select
@@ -203,6 +224,37 @@ const Applications: React.FC = () => {
               <option value="accepted">Accepted</option>
             </select>
             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray pointer-events-none" size={16} />
+          </div>
+
+          <div className="flex items-center gap-2 bg-white border border-charcoal/5 rounded-2xl px-4 py-2 shadow-sm">
+            <div className="flex flex-col">
+              <label className="text-[10px] font-bold text-warm-gray uppercase tracking-widest ml-1">From</label>
+              <input 
+                type="date" 
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="bg-transparent text-sm font-bold text-charcoal outline-none"
+              />
+            </div>
+            <div className="w-px h-8 bg-charcoal/5 mx-2"></div>
+            <div className="flex flex-col">
+              <label className="text-[10px] font-bold text-warm-gray uppercase tracking-widest ml-1">To</label>
+              <input 
+                type="date" 
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="bg-transparent text-sm font-bold text-charcoal outline-none"
+              />
+            </div>
+            {(startDate || endDate) && (
+              <button 
+                onClick={() => { setStartDate(''); setEndDate(''); }}
+                className="ml-2 p-1 hover:bg-cream rounded-full text-warm-gray hover:text-terracotta transition-colors"
+                title="Clear Dates"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
         </div>
       </div>

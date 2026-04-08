@@ -48,6 +48,19 @@ const Generate: React.FC = () => {
   });
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 
+  // Automatic extraction when job post is pasted/changed
+  useEffect(() => {
+    const shouldExtract = jobPost.length > 100 && !companyName && !jobTitle && !extracting && !loading;
+    
+    if (!shouldExtract) return;
+
+    const timer = setTimeout(() => {
+      handleMagicFill();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [jobPost]);
+
   const loadingMessages = [
     "Daddy is reading the job post...",
     "Analyzing your skills...",
@@ -486,15 +499,30 @@ const Generate: React.FC = () => {
                 ))}
               </div>
 
-              <button
-                id="magic-fill-btn"
-                onClick={handleMagicFill}
-                disabled={loading || extracting || jobPost.length < 50}
-                className="flex items-center gap-2 text-sm font-bold text-sage hover:text-sage/80 transition-colors disabled:opacity-50"
-              >
-                {extracting ? <RefreshCw className="animate-spin" size={16} /> : <Sparkles size={16} />}
-                Magic Fill
-              </button>
+              <div className="flex items-center gap-4">
+                <AnimatePresence>
+                  {extracting && (
+                    <motion.div
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      className="flex items-center gap-2 text-xs font-bold text-sage bg-sage/10 px-3 py-1.5 rounded-full"
+                    >
+                      <RefreshCw className="animate-spin" size={12} />
+                      AI Extracting...
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <button
+                  id="magic-fill-btn"
+                  onClick={handleMagicFill}
+                  disabled={loading || extracting || jobPost.length < 50}
+                  className="flex items-center gap-2 text-sm font-bold text-sage hover:text-sage/80 transition-colors disabled:opacity-50"
+                >
+                  {!extracting && <Sparkles size={16} />}
+                  Magic Fill
+                </button>
+              </div>
             </div>
 
             <button
