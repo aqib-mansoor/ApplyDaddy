@@ -128,3 +128,34 @@
   background-repeat: repeat-x;
   background-size: 50px 10px;
 }
+
+/* Custom Date Input Styling */
+input[type="date"] {
+  position: relative;
+  min-width: 120px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  background: transparent;
+  bottom: 0;
+  color: transparent;
+  cursor: pointer;
+  height: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: auto;
+}
+
+input[type="date"]::after {
+  content: "📅";
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 12px;
+  opacity: 0.5;
+}
+

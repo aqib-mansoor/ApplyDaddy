@@ -28,14 +28,15 @@ import toast from 'react-hot-toast';
 
 const Generate: React.FC = () => {
   const { user } = useAuthStore();
-  const [jobPost, setJobPost] = useState(() => localStorage.getItem('daddy_jobPost') || '');
-  const [companyName, setCompanyName] = useState(() => localStorage.getItem('daddy_companyName') || '');
-  const [jobTitle, setJobTitle] = useState(() => localStorage.getItem('daddy_jobTitle') || '');
-  const [tone, setTone] = useState<Tone>(() => (localStorage.getItem('daddy_tone') as Tone) || 'professional');
+  const [jobPost, setJobPost] = useState(() => sessionStorage.getItem('daddy_jobPost') || '');
+  const [companyName, setCompanyName] = useState(() => sessionStorage.getItem('daddy_companyName') || '');
+  const [jobTitle, setJobTitle] = useState(() => sessionStorage.getItem('daddy_jobTitle') || '');
+  const [tone, setTone] = useState<Tone>(() => (sessionStorage.getItem('daddy_tone') as Tone) || 'professional');
   const [loading, setLoading] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [extractedTitles, setExtractedTitles] = useState<string[]>([]);
   const [generated, setGenerated] = useState<GeneratedResponse | null>(() => {
-    const saved = localStorage.getItem('daddy_generated');
+    const saved = sessionStorage.getItem('daddy_generated');
     return saved ? JSON.parse(saved) : null;
   });
   const [copiedType, setCopiedType] = useState<'email' | 'whatsapp' | null>(null);
@@ -43,7 +44,7 @@ const Generate: React.FC = () => {
   const [isFirstTime, setIsFirstTime] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedResponse, setEditedResponse] = useState<GeneratedResponse | null>(() => {
-    const saved = localStorage.getItem('daddy_editedResponse');
+    const saved = sessionStorage.getItem('daddy_editedResponse');
     return saved ? JSON.parse(saved) : null;
   });
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
@@ -82,16 +83,16 @@ const Generate: React.FC = () => {
     return () => clearInterval(interval);
   }, [loading]);
 
-  // Persist state to localStorage
+  // Persist state to sessionStorage
   useEffect(() => {
-    localStorage.setItem('daddy_jobPost', jobPost);
-    localStorage.setItem('daddy_companyName', companyName);
-    localStorage.setItem('daddy_jobTitle', jobTitle);
-    localStorage.setItem('daddy_tone', tone);
-    if (generated) localStorage.setItem('daddy_generated', JSON.stringify(generated));
-    else localStorage.removeItem('daddy_generated');
-    if (editedResponse) localStorage.setItem('daddy_editedResponse', JSON.stringify(editedResponse));
-    else localStorage.removeItem('daddy_editedResponse');
+    sessionStorage.setItem('daddy_jobPost', jobPost);
+    sessionStorage.setItem('daddy_companyName', companyName);
+    sessionStorage.setItem('daddy_jobTitle', jobTitle);
+    sessionStorage.setItem('daddy_tone', tone);
+    if (generated) sessionStorage.setItem('daddy_generated', JSON.stringify(generated));
+    else sessionStorage.removeItem('daddy_generated');
+    if (editedResponse) sessionStorage.setItem('daddy_editedResponse', JSON.stringify(editedResponse));
+    else sessionStorage.removeItem('daddy_editedResponse');
   }, [jobPost, companyName, jobTitle, tone, generated, editedResponse]);
 
   useEffect(() => {
@@ -133,11 +134,21 @@ const Generate: React.FC = () => {
       return;
     }
     setExtracting(true);
+    setExtractedTitles([]);
     try {
       const metadata = await extractJobMetadata(jobPost);
       setCompanyName(metadata.company || '');
-      setJobTitle(metadata.title || '');
-      toast.success('Magic Fill complete!');
+      
+      if (metadata.titles && metadata.titles.length > 1) {
+        setExtractedTitles(metadata.titles);
+        toast('Multiple job titles found. Please select one.', { icon: '🔍' });
+      } else if (metadata.titles && metadata.titles.length === 1) {
+        setJobTitle(metadata.titles[0]);
+        toast.success('Magic Fill complete!');
+      } else {
+        setJobTitle('');
+        toast.success('Company found, but job title is unclear.');
+      }
     } catch (error) {
       toast.error('Magic Fill failed.');
     } finally {
@@ -479,6 +490,33 @@ const Generate: React.FC = () => {
                     className="w-full pl-12 pr-4 py-4 bg-cream/50 border border-white/20 rounded-2xl focus:ring-2 focus:ring-terracotta/50 outline-none transition-all disabled:opacity-50"
                   />
                 </div>
+                
+                <AnimatePresence>
+                  {extractedTitles.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-2 p-4 bg-sage/5 rounded-2xl border border-sage/10"
+                    >
+                      <p className="text-[10px] font-bold text-sage uppercase tracking-widest mb-3">Select a Job Title:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {extractedTitles.map((title, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setJobTitle(title);
+                              setExtractedTitles([]);
+                            }}
+                            className="px-3 py-1.5 bg-white border border-sage/20 text-xs font-bold text-charcoal rounded-lg hover:bg-sage hover:text-white transition-all"
+                          >
+                            {title}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 

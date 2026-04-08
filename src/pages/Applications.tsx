@@ -162,6 +162,20 @@ const Applications: React.FC = () => {
           <p className="text-warm-gray text-sm md:text-base">Track your progress and stay organized with Daddy.</p>
         </div>
         <div className="flex items-center gap-3">
+          {(searchTerm || statusFilter !== 'all' || startDate || endDate) && (
+            <button 
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setStartDate('');
+                setEndDate('');
+              }}
+              className="text-xs font-bold text-terracotta hover:underline flex items-center gap-1 px-4 py-2"
+            >
+              <X size={14} />
+              Clear Filters
+            </button>
+          )}
           <button 
             onClick={exportCSV}
             className="btn-secondary flex items-center gap-2 py-3 px-6"
@@ -226,33 +240,33 @@ const Applications: React.FC = () => {
             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray pointer-events-none" size={16} />
           </div>
 
-          <div className="flex items-center gap-2 bg-white border border-charcoal/5 rounded-2xl px-4 py-2 shadow-sm">
-            <div className="flex flex-col">
-              <label className="text-[10px] font-bold text-warm-gray uppercase tracking-widest ml-1">From</label>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white border border-charcoal/5 rounded-2xl p-2 shadow-sm min-w-[280px]">
+            <div className="flex-1 flex flex-col px-3 py-1 hover:bg-cream/30 rounded-xl transition-colors">
+              <label className="text-[10px] font-bold text-warm-gray uppercase tracking-widest mb-0.5">From</label>
               <input 
                 type="date" 
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="bg-transparent text-sm font-bold text-charcoal outline-none"
+                className="bg-transparent text-sm font-bold text-charcoal outline-none w-full cursor-pointer min-h-[24px]"
               />
             </div>
-            <div className="w-px h-8 bg-charcoal/5 mx-2"></div>
-            <div className="flex flex-col">
-              <label className="text-[10px] font-bold text-warm-gray uppercase tracking-widest ml-1">To</label>
+            <div className="hidden sm:block w-px h-8 bg-charcoal/5"></div>
+            <div className="flex-1 flex flex-col px-3 py-1 hover:bg-cream/30 rounded-xl transition-colors">
+              <label className="text-[10px] font-bold text-warm-gray uppercase tracking-widest mb-0.5">To</label>
               <input 
                 type="date" 
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="bg-transparent text-sm font-bold text-charcoal outline-none"
+                className="bg-transparent text-sm font-bold text-charcoal outline-none w-full cursor-pointer min-h-[24px]"
               />
             </div>
             {(startDate || endDate) && (
               <button 
                 onClick={() => { setStartDate(''); setEndDate(''); }}
-                className="ml-2 p-1 hover:bg-cream rounded-full text-warm-gray hover:text-terracotta transition-colors"
+                className="ml-auto sm:ml-2 p-2 hover:bg-terracotta/10 rounded-full text-warm-gray hover:text-terracotta transition-colors"
                 title="Clear Dates"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             )}
           </div>
@@ -357,12 +371,27 @@ const Applications: React.FC = () => {
             </div>
             <p className="text-2xl font-display text-charcoal mb-2">No applications found</p>
             <p className="text-warm-gray mb-8">Try adjusting your filters or start a new application.</p>
-            <button 
-              onClick={() => navigate('/generate')}
-              className="btn-primary px-8 py-4"
-            >
-              Start New Application
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              {(searchTerm || statusFilter !== 'all' || startDate || endDate) && (
+                <button 
+                  onClick={() => {
+                    setSearchTerm('');
+                    setStatusFilter('all');
+                    setStartDate('');
+                    setEndDate('');
+                  }}
+                  className="btn-secondary px-8 py-4"
+                >
+                  Clear All Filters
+                </button>
+              )}
+              <button 
+                onClick={() => navigate('/generate')}
+                className="btn-primary px-8 py-4"
+              >
+                Start New Application
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -2,10 +2,10 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { UserProfile, GeneratedResponse } from "../types";
 import { stripHtml } from "../lib/utils";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const API_KEY = process.env.GEMINI_API_KEY;
 
 if (!API_KEY) {
-  console.warn("VITE_GEMINI_API_KEY is not defined. AI features will not work.");
+  console.warn("GEMINI_API_KEY is not defined. AI features will not work.");
 }
 
 const ai = new GoogleGenAI({ apiKey: API_KEY || "" });
@@ -83,13 +83,14 @@ export async function generateResponse(
   }
 }
 
-export async function extractJobMetadata(jobPost: string): Promise<{ company: string; title: string }> {
+export async function extractJobMetadata(jobPost: string): Promise<{ company: string; titles: string[] }> {
   try {
     const model = "gemini-3-flash-preview";
     
     const prompt = `
-      Extract the company name and job title from the following job post.
-      If not found, return "Unknown".
+      Extract the company name and all job titles mentioned in the following job post.
+      If multiple job roles are being hired for, list all of them.
+      If not found, return "Unknown" for company and an empty array for titles.
       
       JOB POST:
       ${jobPost}
@@ -98,7 +99,7 @@ export async function extractJobMetadata(jobPost: string): Promise<{ company: st
       Return a JSON object:
       {
         "company": "Company Name",
-        "title": "Job Title"
+        "titles": ["Job Title 1", "Job Title 2"]
       }
     `;
 
@@ -111,9 +112,12 @@ export async function extractJobMetadata(jobPost: string): Promise<{ company: st
           type: Type.OBJECT,
           properties: {
             company: { type: Type.STRING },
-            title: { type: Type.STRING },
+            titles: { 
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            },
           },
-          required: ["company", "title"],
+          required: ["company", "titles"],
         },
       },
     });

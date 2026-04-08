@@ -27,6 +27,20 @@ const Sidebar: React.FC = () => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      // Clear job-related localStorage keys
+      const keysToRemove = [
+        'daddy_jobPost',
+        'daddy_companyName',
+        'daddy_jobTitle',
+        'daddy_tone',
+        'daddy_generated',
+        'daddy_editedResponse'
+      ];
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+      
       toast.success("Logged out. Daddy's waiting.");
       navigate('/');
     } catch (error: any) {
