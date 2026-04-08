@@ -26,7 +26,7 @@ import {
 import { useAuthStore } from '../store/useAuthStore';
 import { getApplications, updateApplicationStatus, deleteApplication } from '../services/applicationService';
 import { Application } from '../types';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow, isWithinInterval, subDays } from 'date-fns';
 import toast from 'react-hot-toast';
 import { ApplicationsSkeleton } from '../components/Skeleton';
 
@@ -39,6 +39,7 @@ const Applications: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<Application['status'] | 'all'>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [dateRangeFilter, setDateRangeFilter] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all');
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -112,15 +113,27 @@ const Applications: React.FC = () => {
         ? new Date(app.appliedDate.seconds * 1000) 
         : new Date(app.appliedDate);
       
-      if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        if (appDate < start) matchesDate = false;
-      }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        if (appDate > end) matchesDate = false;
+      if (dateRangeFilter === 'today') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (appDate < today) matchesDate = false;
+      } else if (dateRangeFilter === 'week') {
+        const weekAgo = subDays(new Date(), 7);
+        if (appDate < weekAgo) matchesDate = false;
+      } else if (dateRangeFilter === 'month') {
+        const monthAgo = subDays(new Date(), 30);
+        if (appDate < monthAgo) matchesDate = false;
+      } else if (dateRangeFilter === 'custom') {
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          if (appDate < start) matchesDate = false;
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (appDate > end) matchesDate = false;
+        }
       }
     }
 
@@ -162,11 +175,12 @@ const Applications: React.FC = () => {
           <p className="text-warm-gray text-sm md:text-base">Track your progress and stay organized with Daddy.</p>
         </div>
         <div className="flex items-center gap-3">
-          {(searchTerm || statusFilter !== 'all' || startDate || endDate) && (
+          {(searchTerm || statusFilter !== 'all' || dateRangeFilter !== 'all') && (
             <button 
               onClick={() => {
                 setSearchTerm('');
                 setStatusFilter('all');
+                setDateRangeFilter('all');
                 setStartDate('');
                 setEndDate('');
               }}
@@ -240,36 +254,49 @@ const Applications: React.FC = () => {
             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray pointer-events-none" size={16} />
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white border border-charcoal/5 rounded-2xl p-2 shadow-sm min-w-[280px]">
-            <div className="flex-1 flex flex-col px-3 py-1 hover:bg-cream/30 rounded-xl transition-colors">
-              <label className="text-[10px] font-bold text-warm-gray uppercase tracking-widest mb-0.5">From</label>
-              <input 
-                type="date" 
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                className="bg-transparent text-sm font-bold text-charcoal outline-none w-full cursor-pointer min-h-[24px]"
-              />
-            </div>
-            <div className="hidden sm:block w-px h-8 bg-charcoal/5"></div>
-            <div className="flex-1 flex flex-col px-3 py-1 hover:bg-cream/30 rounded-xl transition-colors">
-              <label className="text-[10px] font-bold text-warm-gray uppercase tracking-widest mb-0.5">To</label>
-              <input 
-                type="date" 
-                value={endDate}
-                onChange={e => setEndDate(e.target.value)}
-                className="bg-transparent text-sm font-bold text-charcoal outline-none w-full cursor-pointer min-h-[24px]"
-              />
-            </div>
-            {(startDate || endDate) && (
-              <button 
-                onClick={() => { setStartDate(''); setEndDate(''); }}
-                className="ml-auto sm:ml-2 p-2 hover:bg-terracotta/10 rounded-full text-warm-gray hover:text-terracotta transition-colors"
-                title="Clear Dates"
-              >
-                <X size={18} />
-              </button>
-            )}
+          <div className="relative flex-1 lg:w-48">
+            <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-warm-gray" size={20} />
+            <select
+              value={dateRangeFilter}
+              onChange={e => setDateRangeFilter(e.target.value as any)}
+              className="w-full pl-12 pr-10 py-4 bg-white border border-charcoal/5 rounded-2xl focus:ring-2 focus:ring-terracotta/50 outline-none transition-all shadow-sm appearance-none font-bold text-charcoal text-sm"
+            >
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">Last 7 Days</option>
+              <option value="month">Last 30 Days</option>
+              <option value="custom">Custom Range</option>
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray pointer-events-none" size={16} />
           </div>
+
+          {dateRangeFilter === 'custom' && (
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white border border-charcoal/5 rounded-2xl p-2 shadow-sm min-w-[280px]"
+            >
+              <div className="flex-1 flex flex-col px-3 py-1 hover:bg-cream/30 rounded-xl transition-colors">
+                <label className="text-[10px] font-bold text-warm-gray uppercase tracking-widest mb-0.5">From</label>
+                <input 
+                  type="date" 
+                  value={startDate}
+                  onChange={e => setStartDate(e.target.value)}
+                  className="bg-transparent text-sm font-bold text-charcoal outline-none w-full cursor-pointer min-h-[24px]"
+                />
+              </div>
+              <div className="hidden sm:block w-px h-8 bg-charcoal/5"></div>
+              <div className="flex-1 flex flex-col px-3 py-1 hover:bg-cream/30 rounded-xl transition-colors">
+                <label className="text-[10px] font-bold text-warm-gray uppercase tracking-widest mb-0.5">To</label>
+                <input 
+                  type="date" 
+                  value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
+                  className="bg-transparent text-sm font-bold text-charcoal outline-none w-full cursor-pointer min-h-[24px]"
+                />
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
 
@@ -295,8 +322,13 @@ const Applications: React.FC = () => {
                       <div className="flex flex-wrap items-center gap-3">
                         <span className="text-sm font-bold text-warm-gray">{app.jobTitle}</span>
                         <span className="w-1 h-1 bg-warm-gray/30 rounded-full"></span>
-                        <span className="text-xs text-warm-gray">
-                          {app.appliedDate?.seconds ? format(new Date(app.appliedDate.seconds * 1000), 'MMM d, yyyy') : 'Recently'}
+                        <span className="text-xs text-warm-gray flex items-center gap-1">
+                          <Clock size={12} />
+                          {app.appliedDate?.seconds 
+                            ? (Date.now() / 1000 - app.appliedDate.seconds < 86400 * 7
+                                ? formatDistanceToNow(new Date(app.appliedDate.seconds * 1000), { addSuffix: true })
+                                : format(new Date(app.appliedDate.seconds * 1000), 'MMM d, yyyy'))
+                            : 'Recently'}
                         </span>
                       </div>
                     </div>

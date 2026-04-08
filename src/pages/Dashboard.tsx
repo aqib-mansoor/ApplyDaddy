@@ -13,7 +13,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { getApplications } from '../services/applicationService';
 import { getUserProfile } from '../services/userService';
 import { Application, UserProfile } from '../types';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import gsap from 'gsap';
@@ -291,7 +291,11 @@ const Dashboard: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-warm-gray">
-                      {app.appliedDate?.seconds ? format(new Date(app.appliedDate.seconds * 1000), 'MMM d, yyyy') : 'Just now'}
+                      {app.appliedDate?.seconds 
+                        ? (Date.now() / 1000 - app.appliedDate.seconds < 86400 * 7
+                            ? formatDistanceToNow(new Date(app.appliedDate.seconds * 1000), { addSuffix: true })
+                            : format(new Date(app.appliedDate.seconds * 1000), 'MMM d, yyyy'))
+                        : 'Just now'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button className="p-2 text-warm-gray hover:text-charcoal transition-colors">

@@ -440,11 +440,21 @@ const Generate: React.FC = () => {
             )}
 
             <div className="space-y-2">
-              <div className="flex justify-between items-end">
+              <div className="flex justify-between items-center">
                 <label className="text-sm font-bold text-charcoal ml-1">Job Description *</label>
-                <span className={`text-xs font-medium ${jobPost.length > 5000 ? 'text-terracotta' : 'text-warm-gray'}`}>
-                  {jobPost.length} / 5000
-                </span>
+                <div className="flex items-center gap-2 md:gap-4">
+                  <button
+                    onClick={handleReset}
+                    className="flex items-center gap-1.5 px-2 py-1 md:px-3 md:py-1.5 bg-cream/50 hover:bg-terracotta/10 text-warm-gray hover:text-terracotta rounded-xl transition-all group border border-charcoal/5"
+                    title="Clear all fields"
+                  >
+                    <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest">Clear All</span>
+                  </button>
+                  <span className={`text-[10px] md:text-xs font-medium ${jobPost.length > 5000 ? 'text-terracotta' : 'text-warm-gray'}`}>
+                    {jobPost.length} / 5000
+                  </span>
+                </div>
               </div>
               <textarea
                 id="job-post-input"
