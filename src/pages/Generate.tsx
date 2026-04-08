@@ -236,26 +236,9 @@ const Generate: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h2 className="text-4xl font-display text-charcoal mb-2">Generate Response</h2>
-          <p className="text-warm-gray">Let Daddy craft the perfect pitch for you.</p>
-        </div>
-        <button
-          onClick={() => {
-            setJobPost('');
-            setCompanyName('');
-            setJobTitle('');
-            setGenerated(null);
-            setEditedResponse(null);
-            setExtractedTitles([]);
-            toast.success('Fields cleared.');
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-charcoal/5 rounded-xl text-xs font-bold text-warm-gray hover:text-terracotta hover:border-terracotta/20 transition-all shadow-sm"
-        >
-          <Trash2 size={14} />
-          Clear All Fields
-        </button>
+      <header className="mb-12">
+        <h2 className="text-4xl font-display text-charcoal mb-2">Generate Response</h2>
+        <p className="text-warm-gray">Let Daddy craft the perfect pitch for you.</p>
       </header>
 
       <div className="flex flex-col lg:flex-row gap-8">

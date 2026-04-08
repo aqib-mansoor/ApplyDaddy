@@ -21,7 +21,8 @@ import {
   UserCircle,
   Clipboard,
   Wand2,
-  Rocket
+  Rocket,
+  History
 } from 'lucide-react';
 import AuthModal from '../components/AuthModal';
 import { useAuthStore } from '../store/useAuthStore';
@@ -32,11 +33,20 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
+import HeroCanvas from '../components/HeroCanvas';
+import LegalModal from '../components/LegalModal';
+import CookieConsent from '../components/CookieConsent';
+
 const LandingPage: React.FC = () => {
   const { user, loading: authLoading } = useAuthStore();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  
+  const [legalModal, setLegalModal] = useState<{ isOpen: boolean; type: 'privacy' | 'terms' | 'cookies' }>({
+    isOpen: false,
+    type: 'privacy'
+  });
   
   const headlineRef = useRef<HTMLHeadingElement>(null);
 
@@ -81,6 +91,24 @@ const LandingPage: React.FC = () => {
       description: "Whether it's a formal email or a quick WhatsApp nudge, Daddy's got you covered.",
       icon: Send,
       color: "text-sage bg-sage/10"
+    },
+    {
+      title: "Tone Customization",
+      description: "Choose between professional, casual, or enthusiastic tones to match any company culture.",
+      icon: Sparkles,
+      color: "text-blue-500 bg-blue-500/10"
+    },
+    {
+      title: "Application History",
+      description: "Keep track of every pitch you've sent. Never lose a winning response again.",
+      icon: History,
+      color: "text-purple-500 bg-purple-500/10"
+    },
+    {
+      title: "Smart Extraction",
+      description: "Just paste the job post. Our AI automatically extracts company names and job titles.",
+      icon: MousePointer2,
+      color: "text-emerald-500 bg-emerald-500/10"
     }
   ];
 
@@ -144,6 +172,10 @@ const LandingPage: React.FC = () => {
     { q: "What if I'm not tech-savvy?", a: "If you can copy and paste, you can use ApplyDaddy. It's that simple." }
   ];
 
+  const openLegal = (type: 'privacy' | 'terms' | 'cookies') => {
+    setLegalModal({ isOpen: true, type });
+  };
+
   return (
     <div className="min-h-screen bg-cream selection:bg-terracotta/30 overflow-x-hidden">
       <AuthModal 
@@ -151,6 +183,14 @@ const LandingPage: React.FC = () => {
         onClose={() => setIsAuthModalOpen(false)} 
         initialMode={authMode} 
       />
+
+      <LegalModal 
+        isOpen={legalModal.isOpen}
+        onClose={() => setLegalModal({ ...legalModal, isOpen: false })}
+        type={legalModal.type}
+      />
+
+      <CookieConsent onOpenCookies={() => openLegal('cookies')} />
 
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glass px-4 md:px-6 py-3 md:py-4 flex items-center justify-between border-b border-charcoal/5 md:m-4 md:rounded-3xl">
@@ -184,7 +224,8 @@ const LandingPage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-32 md:pt-48 pb-20 px-6 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 md:gap-16">
+      <section className="relative pt-24 md:pt-32 pb-12 px-6 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 md:gap-16">
+        <HeroCanvas />
         {/* Background Accents */}
         <div className="absolute top-20 right-0 w-64 md:w-96 h-64 md:h-96 bg-gold/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
         <div className="absolute bottom-0 left-0 w-64 md:w-96 h-64 md:h-96 bg-terracotta/5 rounded-full blur-3xl -z-10"></div>
@@ -376,7 +417,7 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Trusted By Section */}
-      <section className="py-12 border-y border-charcoal/5 bg-white/30 overflow-hidden">
+      <section className="py-8 border-y border-charcoal/5 bg-white/30 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <p className="text-center text-[10px] font-bold text-warm-gray uppercase tracking-[0.3em] mb-8">Users Hired At</p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-24 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
@@ -396,15 +437,87 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-32 px-6">
+      {/* Stats Section */}
+      <section className="py-16 px-6 bg-white/50 border-y border-charcoal/5">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <h3 className="text-5xl font-display text-charcoal mb-6 squiggly inline-block">Why Daddy's the Best</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {[
+              { label: "Applications Generated", value: "50,000+" },
+              { label: "Interviews Secured", value: "12,000+" },
+              { label: "Time Saved (Hours)", value: "100k+" },
+              { label: "Success Rate", value: "98%" }
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="space-y-2"
+              >
+                <h4 className="text-3xl md:text-4xl font-display text-terracotta">{stat.value}</h4>
+                <p className="text-xs font-bold text-warm-gray uppercase tracking-widest">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Mission Section */}
+      <section className="py-20 px-6 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
+          <div className="flex-1 order-2 lg:order-1">
+            <div className="relative">
+              <img 
+                src="https://picsum.photos/seed/mission/800/600" 
+                alt="Our Mission" 
+                className="rounded-[3rem] shadow-2xl grayscale hover:grayscale-0 transition-all duration-700"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute -bottom-6 -left-6 glass p-6 rounded-2xl shadow-xl max-w-xs">
+                <p className="text-sm italic text-charcoal">"We believe everyone deserves a fair shot at their dream career, regardless of their writing speed."</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 order-1 lg:order-2">
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <h3 className="text-4xl md:text-5xl font-display text-charcoal mb-8">Our Mission: <span className="text-sage">Leveling the Playing Field</span></h3>
+              <p className="text-lg text-warm-gray mb-6 leading-relaxed">
+                The job market is broken. Recruiters spend 6 seconds on a resume, but expect you to spend 6 hours on a cover letter. Daddy was born to fix that imbalance.
+              </p>
+              <p className="text-lg text-warm-gray mb-8 leading-relaxed">
+                By leveraging state-of-the-art AI, we help you articulate your value clearly, professionally, and instantly. We're not just a tool; we're your secret weapon in a competitive world.
+              </p>
+              <ul className="space-y-4">
+                {[
+                  "Democratizing professional writing",
+                  "Reducing job-hunt burnout",
+                  "Maximizing human potential through AI"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-charcoal font-bold">
+                    <CheckCircle2 className="text-sage" size={20} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h3 className="text-5xl font-display text-charcoal mb-4 squiggly inline-block">Why Daddy's the Best</h3>
             <p className="text-xl text-warm-gray max-w-2xl mx-auto">No more generic applications. No more silence. Just results.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, i) => (
               <motion.div
                 key={i}
@@ -426,13 +539,101 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Detailed AI Advantage Section */}
+      <section className="py-20 px-6 bg-charcoal text-white relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-10">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-terracotta rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-gold rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <h3 className="text-4xl md:text-5xl font-display mb-8">The AI Advantage: <span className="text-terracotta">Precision Meets Speed</span></h3>
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center shrink-0">
+                    <Sparkles className="text-gold" size={24} />
+                  </div>
+                  <div>
+                    <h5 className="text-xl font-bold mb-2">Semantic Matching</h5>
+                    <p className="text-white/60">Our AI doesn't just look for keywords. It understands the context of your skills and how they solve the specific problems mentioned in the job post.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center shrink-0">
+                    <Target className="text-terracotta" size={24} />
+                  </div>
+                  <div>
+                    <h5 className="text-xl font-bold mb-2">Tone Adaptation</h5>
+                    <p className="text-white/60">Whether you're applying to a buttoned-up law firm or a disruptive tech startup, Daddy adapts the language to match the company culture perfectly.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center shrink-0">
+                    <Zap className="text-sage" size={24} />
+                  </div>
+                  <div>
+                    <h5 className="text-xl font-bold mb-2">Instant Iteration</h5>
+                    <p className="text-white/60">Not happy with the first draft? Tweak the tone and regenerate in seconds. It's like having a world-class copywriter on speed dial.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="relative"
+            >
+              <div className="glass-dark p-8 rounded-[3rem] border-white/5">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest">Daddy AI v3.1</span>
+                  </div>
+                  <div className="font-mono text-sm space-y-4">
+                    <p className="text-sage">{"// Analyzing job description..."}</p>
+                    <p className="text-white/80">{"const match = ai.analyze(jobPost, userProfile);"}</p>
+                    <p className="text-gold">{"console.log(`Match Score: ${match.score}%`);"}</p>
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                      <p className="text-terracotta text-xs mb-2">{"// Generated Pitch Snippet"}</p>
+                      <p className="text-white/60 italic leading-relaxed">
+                        "Given your recent expansion into cloud-native architecture, my experience leading the migration at TechCorp aligns directly with your Q3 objectives..."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Floating Badge */}
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="absolute -bottom-6 -right-6 bg-terracotta p-4 rounded-2xl shadow-2xl"
+              >
+                <p className="text-xs font-bold uppercase tracking-widest">98% Success Rate</p>
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works */}
-      <section id="how-it-works" className="py-32 px-6 relative overflow-hidden">
+      <section id="how-it-works" className="py-20 px-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-terracotta/5 rounded-full blur-3xl -z-10"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl -z-10"></div>
         
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-24">
+          <div className="text-center mb-16">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -442,7 +643,7 @@ const LandingPage: React.FC = () => {
               <Zap className="text-gold" size={16} />
               <span className="text-xs font-bold text-charcoal uppercase tracking-widest">Simple & Fast</span>
             </motion.div>
-            <h3 className="text-5xl md:text-6xl font-display text-charcoal mb-6">How It Works</h3>
+            <h3 className="text-5xl md:text-6xl font-display text-charcoal mb-4">How It Works</h3>
             <p className="text-warm-gray text-xl max-w-2xl mx-auto">Four simple steps to land your dream job with Daddy's help.</p>
           </div>
           
@@ -490,10 +691,10 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Social Proof Section */}
-      <section className="py-32 px-6">
+      <section className="py-20 px-6 bg-cream/50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <h3 className="text-5xl font-display text-charcoal mb-6">What the Kids Say</h3>
+          <div className="text-center mb-16">
+            <h3 className="text-5xl font-display text-charcoal mb-4">What the Kids Say</h3>
             <p className="text-xl text-warm-gray">Real stories from real job seekers.</p>
           </div>
 
@@ -529,10 +730,10 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-32 px-6">
+      <section id="faq" className="py-20 px-6">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-20">
-            <h3 className="text-5xl font-display text-charcoal mb-6">Common Questions</h3>
+          <div className="text-center mb-16">
+            <h3 className="text-5xl font-display text-charcoal mb-4">Common Questions</h3>
             <p className="text-xl text-warm-gray">Everything you need to know about Daddy.</p>
           </div>
 
@@ -677,8 +878,8 @@ const LandingPage: React.FC = () => {
               <h5 className="text-lg font-bold">Company</h5>
               <ul className="space-y-4 text-white/50">
                 <li><a href="#" className="hover:text-terracotta transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-terracotta transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-terracotta transition-colors">Terms of Service</a></li>
+                <li><button onClick={() => openLegal('privacy')} className="hover:text-terracotta transition-colors text-left">Privacy Policy</button></li>
+                <li><button onClick={() => openLegal('terms')} className="hover:text-terracotta transition-colors text-left">Terms of Service</button></li>
                 <li><a href="#faq" className="hover:text-terracotta transition-colors">FAQ</a></li>
               </ul>
             </div>
@@ -711,9 +912,9 @@ const LandingPage: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-8 text-sm text-white/40">
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
-              <a href="#" className="hover:text-white transition-colors">Cookies</a>
+              <button onClick={() => openLegal('privacy')} className="hover:text-white transition-colors">Privacy</button>
+              <button onClick={() => openLegal('terms')} className="hover:text-white transition-colors">Terms</button>
+              <button onClick={() => openLegal('cookies')} className="hover:text-white transition-colors">Cookies</button>
             </div>
 
             <div className="flex items-center gap-2 text-sm text-white/40">

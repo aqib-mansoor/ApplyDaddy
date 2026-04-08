@@ -103,9 +103,9 @@ const Settings: React.FC = () => {
               <span className="px-3 py-1 bg-sage/10 text-sage text-[10px] font-bold uppercase rounded-full">Verified</span>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-cream/50 rounded-2xl border border-white/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-cream/50 rounded-2xl border border-white/20 gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-terracotta shadow-sm">
+                <div className="w-10 h-10 bg-white rounded-full flex-shrink-0 flex items-center justify-center text-terracotta shadow-sm">
                   <Key size={18} />
                 </div>
                 <div>
@@ -115,7 +115,7 @@ const Settings: React.FC = () => {
               </div>
               <button 
                 onClick={() => setIsResetModalOpen(true)}
-                className="text-xs font-bold text-terracotta hover:underline"
+                className="w-full sm:w-auto px-4 py-2 bg-white border border-terracotta/20 text-terracotta text-xs font-bold rounded-xl hover:bg-terracotta hover:text-white transition-all shadow-sm"
               >
                 Reset Password
               </button>
@@ -143,14 +143,14 @@ const Settings: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-cream/50 rounded-2xl border border-white/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-cream/50 rounded-2xl border border-white/20 gap-4">
               <div>
                 <p className="text-sm font-bold text-charcoal">Data Portability</p>
                 <p className="text-xs text-warm-gray">Download all your application history.</p>
               </div>
               <button 
                 onClick={handleExportData}
-                className="flex items-center gap-2 px-4 py-2 bg-charcoal text-white text-xs font-bold rounded-xl hover:bg-charcoal/90 transition-all"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-charcoal text-white text-xs font-bold rounded-xl hover:bg-charcoal/90 transition-all shadow-lg shadow-charcoal/10"
               >
                 <Download size={14} />
                 Export CSV
@@ -162,24 +162,24 @@ const Settings: React.FC = () => {
         {/* Troubleshooting Section */}
         <section className="glass p-6 md:p-8 rounded-[2.5rem] space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+            <div className="p-2 bg-gold/10 rounded-xl text-gold">
               <Shield size={20} />
             </div>
             <h3 className="text-xl font-bold text-charcoal">Troubleshooting</h3>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-cream/50 rounded-2xl border border-white/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-cream/50 rounded-2xl border border-white/20 gap-4">
               <div>
                 <p className="text-sm font-bold text-charcoal">Connection Issues?</p>
-                <p className="text-xs text-warm-gray">If Firestore is stuck "offline", try resetting the connection.</p>
+                <p className="text-xs text-warm-gray">If Firestore is stuck "offline", try resetting.</p>
               </div>
               <button 
                 onClick={() => {
                   toast.loading("Resetting connection...");
                   resetFirestore();
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/20"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-charcoal text-white text-xs font-bold rounded-xl hover:bg-charcoal/90 transition-all shadow-lg shadow-charcoal/10"
               >
                 <RefreshCcw size={14} />
                 Reset Connection

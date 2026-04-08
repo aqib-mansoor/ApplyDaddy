@@ -24,8 +24,6 @@ const App: React.FC = () => {
     const testConnection = async (retries = 3) => {
       for (let i = 0; i < retries; i++) {
         try {
-          // Try a simple getDoc first which might use cache if persistence is on
-          // but we really want to test the server connection
           await getDocFromServer(doc(db, 'test', 'connection'));
           console.log("Firestore connection successful.");
           return; // Success
@@ -34,26 +32,33 @@ const App: React.FC = () => {
           if (i === retries - 1) {
             if(error instanceof Error && (error.message.includes('the client is offline') || error.message.includes('unavailable') || error.message.includes('timeout'))) {
               console.error("Firestore Final Error:", error.message);
-              toast.error((t) => (
-                <div className="flex flex-col gap-2">
-                  <p>Firestore is having trouble connecting. Daddy is trying his best, but the backend is unreachable right now.</p>
-                  <button 
-                    onClick={() => {
-                      toast.dismiss(t.id);
-                      resetFirestore();
-                    }}
-                    className="bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg text-xs transition-colors self-start"
-                  >
-                    Reset Connection
-                  </button>
-                </div>
-              ), {
-                duration: 15000,
-                id: 'firestore-offline-error'
-              });
+              
+              // Only show the intrusive error if the user is logged in or not on the landing page
+              const isLandingPage = window.location.pathname === '/';
+              if (!isLandingPage) {
+                toast.error((t) => (
+                  <div className="flex flex-col gap-2">
+                    <p>Firestore is having trouble connecting. Daddy is trying his best, but the backend is unreachable right now.</p>
+                    <button 
+                      onClick={() => {
+                        toast.dismiss(t.id);
+                        resetFirestore();
+                      }}
+                      className="bg-terracotta hover:bg-terracotta/90 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all self-start shadow-lg shadow-terracotta/20"
+                    >
+                      Reset Connection
+                    </button>
+                  </div>
+                ), {
+                  duration: 15000,
+                  id: 'firestore-offline-error'
+                });
+              } else {
+                // On landing page, just log it or show a very subtle hint if absolutely necessary
+                console.warn("Firestore connection failed on landing page. This will be re-tested when user interacts.");
+              }
             }
           }
-          // Wait a bit before retrying
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }

@@ -178,10 +178,10 @@ const Applications: React.FC = () => {
           )}
           <button 
             onClick={exportCSV}
-            className="btn-secondary flex items-center gap-2 py-3 px-6"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-charcoal text-white text-xs font-bold rounded-2xl hover:bg-charcoal/90 transition-all shadow-lg shadow-charcoal/10"
           >
             <Download size={18} />
-            <span className="hidden sm:inline">Export CSV</span>
+            <span>Export CSV</span>
           </button>
         </div>
       </header>
