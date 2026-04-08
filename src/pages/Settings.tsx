@@ -11,10 +11,11 @@ import {
   Bell,
   Trash2,
   Key,
-  Download
+  Download,
+  RefreshCcw
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
-import { auth } from '../firebase';
+import { auth, resetFirestore } from '../firebase';
 import { signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -153,6 +154,35 @@ const Settings: React.FC = () => {
               >
                 <Download size={14} />
                 Export CSV
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Troubleshooting Section */}
+        <section className="glass p-6 md:p-8 rounded-[2.5rem] space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+              <Shield size={20} />
+            </div>
+            <h3 className="text-xl font-bold text-charcoal">Troubleshooting</h3>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-cream/50 rounded-2xl border border-white/20">
+              <div>
+                <p className="text-sm font-bold text-charcoal">Connection Issues?</p>
+                <p className="text-xs text-warm-gray">If Firestore is stuck "offline", try resetting the connection.</p>
+              </div>
+              <button 
+                onClick={() => {
+                  toast.loading("Resetting connection...");
+                  resetFirestore();
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/20"
+              >
+                <RefreshCcw size={14} />
+                Reset Connection
               </button>
             </div>
           </div>

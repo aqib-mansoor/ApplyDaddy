@@ -39,9 +39,13 @@ class ErrorBoundary extends Component<Props, State> {
         if (parsedError.error?.includes('insufficient permissions')) {
           errorMessage = "It seems you don't have permission to do that. Are you logged in correctly?";
           isPermissionError = true;
+        } else if (parsedError.error?.includes('offline') || parsedError.error?.includes('unavailable') || parsedError.error?.includes('timeout')) {
+          errorMessage = "Firestore is currently unreachable. Please check your internet connection and Firebase configuration.";
         }
       } catch {
-        // Not a JSON error, use default message
+        if (this.state.error?.message.includes('offline') || this.state.error?.message.includes('unavailable') || this.state.error?.message.includes('timeout')) {
+          errorMessage = "Firestore is currently unreachable. Please check your internet connection and Firebase configuration.";
+        }
       }
 
       return (

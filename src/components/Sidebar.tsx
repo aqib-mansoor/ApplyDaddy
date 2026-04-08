@@ -41,6 +41,9 @@ const Sidebar: React.FC = () => {
         sessionStorage.removeItem(key);
       });
       
+      // Clear all session storage just in case
+      sessionStorage.clear();
+      
       toast.success("Logged out. Daddy's waiting.");
       navigate('/');
     } catch (error: any) {

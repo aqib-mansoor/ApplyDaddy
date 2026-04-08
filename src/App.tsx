@@ -2,9 +2,9 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDocFromServer } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { auth, db, resetFirestore } from './firebase';
 import { useAuthStore } from './store/useAuthStore';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -21,12 +21,40 @@ const App: React.FC = () => {
   const { setUser, setLoading } = useAuthStore();
 
   useEffect(() => {
-    const testConnection = async () => {
-      try {
-        await getDocFromServer(doc(db, 'test', 'connection'));
-      } catch (error) {
-        if(error instanceof Error && error.message.includes('the client is offline')) {
-          console.error("Please check your Firebase configuration. The Firestore client is offline.");
+    const testConnection = async (retries = 3) => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          // Try a simple getDoc first which might use cache if persistence is on
+          // but we really want to test the server connection
+          await getDocFromServer(doc(db, 'test', 'connection'));
+          console.log("Firestore connection successful.");
+          return; // Success
+        } catch (error) {
+          console.warn(`Firestore connection attempt ${i + 1} failed:`, error);
+          if (i === retries - 1) {
+            if(error instanceof Error && (error.message.includes('the client is offline') || error.message.includes('unavailable') || error.message.includes('timeout'))) {
+              console.error("Firestore Final Error:", error.message);
+              toast.error((t) => (
+                <div className="flex flex-col gap-2">
+                  <p>Firestore is having trouble connecting. Daddy is trying his best, but the backend is unreachable right now.</p>
+                  <button 
+                    onClick={() => {
+                      toast.dismiss(t.id);
+                      resetFirestore();
+                    }}
+                    className="bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg text-xs transition-colors self-start"
+                  >
+                    Reset Connection
+                  </button>
+                </div>
+              ), {
+                duration: 15000,
+                id: 'firestore-offline-error'
+              });
+            }
+          }
+          // Wait a bit before retrying
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }
     };

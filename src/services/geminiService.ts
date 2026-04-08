@@ -2,13 +2,27 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { UserProfile, GeneratedResponse } from "../types";
 import { stripHtml } from "../lib/utils";
 
-const API_KEY = process.env.GEMINI_API_KEY;
+const getApiKey = () => {
+  // Try multiple sources for the API key
+  const key = process.env.GEMINI_API_KEY || 
+              (import.meta as any).env.VITE_GEMINI_API_KEY || 
+              (import.meta as any).env.GEMINI_API_KEY;
+  return key;
+};
 
-if (!API_KEY) {
-  console.warn("GEMINI_API_KEY is not defined. AI features will not work.");
+function getAI() {
+  const API_KEY = getApiKey();
+  if (!API_KEY) {
+    throw new Error(
+      "Gemini API Key is missing. \n\n" +
+      "DEBUG INFO: \n" +
+      "- process.env.GEMINI_API_KEY: " + (process.env.GEMINI_API_KEY ? "Found" : "Missing") + "\n" +
+      "- VITE_GEMINI_API_KEY: " + ((import.meta as any).env.VITE_GEMINI_API_KEY ? "Found" : "Missing") + "\n\n" +
+      "FIX: Please add GEMINI_API_KEY or VITE_GEMINI_API_KEY to your Vercel Environment Variables and REDEPLOY."
+    );
+  }
+  return new GoogleGenAI({ apiKey: API_KEY });
 }
-
-const ai = new GoogleGenAI({ apiKey: API_KEY || "" });
 
 export async function generateResponse(
   jobPost: string,
@@ -16,6 +30,7 @@ export async function generateResponse(
   tone: "professional" | "casual" | "enthusiastic"
 ): Promise<GeneratedResponse> {
   try {
+    const ai = getAI();
     const model = "gemini-3-flash-preview";
     
     const prompt = `
@@ -76,8 +91,12 @@ export async function generateResponse(
     return JSON.parse(response.text);
   } catch (error: any) {
     console.error("Gemini Generation Error:", error);
-    if (error.message?.includes("API key not valid")) {
-      throw new Error("Invalid Gemini API Key. Please check your Vercel environment variables.");
+    const message = error.message || "";
+    if (message.includes("API key not valid") || message.includes("invalid API key") || message.includes("403") || message.includes("401")) {
+      throw new Error("Invalid Gemini API Key. The key was found but rejected by Google. Please check if your key is restricted or create a NEW one in Google AI Studio.");
+    }
+    if (message.includes("API key is missing")) {
+      throw new Error("Gemini API Key is missing. Please ensure GEMINI_API_KEY or VITE_GEMINI_API_KEY is set in your Vercel Environment Variables and REDEPLOY.");
     }
     throw error;
   }
@@ -85,6 +104,7 @@ export async function generateResponse(
 
 export async function extractJobMetadata(jobPost: string): Promise<{ company: string; titles: string[] }> {
   try {
+    const ai = getAI();
     const model = "gemini-3-flash-preview";
     
     const prompt = `
@@ -125,8 +145,12 @@ export async function extractJobMetadata(jobPost: string): Promise<{ company: st
     return JSON.parse(response.text);
   } catch (error: any) {
     console.error("Gemini Extraction Error:", error);
-    if (error.message?.includes("API key not valid")) {
-      throw new Error("Invalid Gemini API Key. Please check your Vercel environment variables.");
+    const message = error.message || "";
+    if (message.includes("API key not valid") || message.includes("invalid API key") || message.includes("403") || message.includes("401")) {
+      throw new Error("Invalid Gemini API Key. The key was found but rejected by Google. Please check if your key is restricted or create a NEW one in Google AI Studio.");
+    }
+    if (message.includes("API key is missing")) {
+      throw new Error("Gemini API Key is missing. Please ensure GEMINI_API_KEY or VITE_GEMINI_API_KEY is set in your Vercel Environment Variables and REDEPLOY.");
     }
     throw error;
   }
