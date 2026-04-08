@@ -1,0 +1,54 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user profile information for job response generation.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique user ID from Firebase Auth." },
+        "fullName": { "type": "string", "description": "The user's full name." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "skills": { "type": "array", "items": { "type": "string" }, "description": "A list of the user's skills." },
+        "experience": { "type": "string", "description": "A summary of the user's work experience." },
+        "bio": { "type": "string", "description": "The user's bio." },
+        "createdAt": { "type": "object", "description": "Firestore Timestamp" },
+        "updatedAt": { "type": "object", "description": "Firestore Timestamp" }
+      },
+      "required": ["uid", "fullName", "email"]
+    },
+    "JobApplication": {
+      "title": "Job Application",
+      "description": "Stores details of a job application and the generated responses.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The ID of the user who created this application." },
+        "jobPostText": { "type": "string", "description": "The full text of the job post." },
+        "companyName": { "type": "string", "description": "The name of the company." },
+        "jobTitle": { "type": "string", "description": "The title of the job." },
+        "generatedEmail": {
+          "type": "object",
+          "properties": {
+            "subject": { "type": "string" },
+            "body": { "type": "string" }
+          },
+          "required": ["subject", "body"]
+        },
+        "generatedWhatsapp": { "type": "string", "description": "The generated WhatsApp message." },
+        "status": { "type": "string", "enum": ["pending", "applied", "interview", "rejected", "accepted"] },
+        "appliedDate": { "type": "object", "description": "Firestore Timestamp" },
+        "createdAt": { "type": "object", "description": "Firestore Timestamp" }
+      },
+      "required": ["userId", "jobPostText", "companyName", "jobTitle", "generatedEmail", "generatedWhatsapp", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document."
+    },
+    "/applications/{applicationId}": {
+      "schema": "JobApplication",
+      "description": "Job application history document."
+    }
+  }
+}

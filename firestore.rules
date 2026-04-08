@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (matches Firebase Auth UID)
+    // Fields:
+    //   - uid: string (required)
+    //   - fullName: string (required, 1-100 chars)
+    //   - email: string (required, valid email)
+    //   - skills: list of strings (max 50 items, each max 50 chars)
+    //   - experience: string (max 5000 chars)
+    //   - bio: string (max 1000 chars)
+    //   - createdAt: timestamp
+    //   - updatedAt: timestamp
+    //
+    // Collection: applications
+    // Document ID: {applicationId}
+    // Fields:
+    //   - userId: string (required, matches owner UID)
+    //   - jobPostText: string (required, max 10000 chars)
+    //   - companyName: string (required, 1-200 chars)
+    //   - jobTitle: string (required, 1-200 chars)
+    //   - generatedEmail: map (required)
+    //     - subject: string
+    //     - body: string
+    //   - generatedWhatsapp: string (required)
+    //   - status: string (enum: pending, applied, interview, rejected, accepted)
+    //   - appliedDate: timestamp
+    //   - createdAt: timestamp
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "itzaqib248@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'fullName', 'email']) &&
+             data.uid == request.auth.uid &&
+             data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 100 &&
+             isValidEmail(data.email) &&
+             (!('skills' in data) || (data.skills is list && data.skills.size() <= 50)) &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 1000)) &&
+             (!('experience' in data) || (data.experience is string && data.experience.size() <= 5000));
+    }
+
+    function isValidApplication(data) {
+      return data.keys().hasAll(['userId', 'jobPostText', 'companyName', 'jobTitle', 'generatedEmail', 'generatedWhatsapp', 'status']) &&
+             data.userId == request.auth.uid &&
+             data.jobPostText is string && data.jobPostText.size() <= 10000 &&
+             data.companyName is string && data.companyName.size() >= 1 && data.companyName.size() <= 200 &&
+             data.jobTitle is string && data.jobTitle.size() >= 1 && data.jobTitle.size() <= 200 &&
+             data.status in ['pending', 'applied', 'interview', 'rejected', 'accepted'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && 
+                      request.resource.data.uid == resource.data.uid;
+      allow delete: if isAdmin();
+    }
+
+    match /applications/{applicationId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && isValidApplication(request.resource.data);
+      allow update: if (isDocOwner() || isAdmin()) && isValidApplication(request.resource.data) &&
+                      request.resource.data.userId == resource.data.userId;
+      allow delete: if isDocOwner() || isAdmin();
+    }
+  }
+}
