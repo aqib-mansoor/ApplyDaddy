@@ -10,7 +10,10 @@ import {
   FileText, 
   Briefcase,
   Sparkles,
-  Edit2
+  Edit2,
+  Phone,
+  GraduationCap,
+  MapPin
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { getUserProfile, updateUserProfile } from '../services/userService';
@@ -143,6 +146,51 @@ const Profile: React.FC = () => {
                 />
                 <label className="absolute left-11 top-2 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-warm-gray transition-all pointer-events-none">
                   Email Address
+                </label>
+              </div>
+
+              {/* Phone */}
+              <div className="relative group">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-warm-gray group-focus-within:text-terracotta transition-colors" size={18} />
+                <input
+                  type="tel"
+                  value={profile?.phone || ''}
+                  onChange={e => setProfile(prev => prev ? { ...prev, phone: e.target.value } : null)}
+                  placeholder=" "
+                  className="peer w-full pl-11 pr-4 pt-6 pb-2 bg-white/40 border border-charcoal/5 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-terracotta/30 outline-none transition-all text-sm md:text-base"
+                />
+                <label className="absolute left-11 top-2 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-warm-gray peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-xs md:peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal transition-all pointer-events-none">
+                  Phone Number
+                </label>
+              </div>
+
+              {/* Location */}
+              <div className="relative group">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-warm-gray group-focus-within:text-terracotta transition-colors" size={18} />
+                <input
+                  type="text"
+                  value={profile?.location || ''}
+                  onChange={e => setProfile(prev => prev ? { ...prev, location: e.target.value } : null)}
+                  placeholder=" "
+                  className="peer w-full pl-11 pr-4 pt-6 pb-2 bg-white/40 border border-charcoal/5 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-terracotta/30 outline-none transition-all text-sm md:text-base"
+                />
+                <label className="absolute left-11 top-2 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-warm-gray peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-xs md:peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal transition-all pointer-events-none">
+                  Location (City, Country)
+                </label>
+              </div>
+
+              {/* Education */}
+              <div className="relative group md:col-span-2">
+                <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-warm-gray group-focus-within:text-terracotta transition-colors" size={18} />
+                <input
+                  type="text"
+                  value={profile?.education || ''}
+                  onChange={e => setProfile(prev => prev ? { ...prev, education: e.target.value } : null)}
+                  placeholder=" "
+                  className="peer w-full pl-11 pr-4 pt-6 pb-2 bg-white/40 border border-charcoal/5 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-terracotta/30 outline-none transition-all text-sm md:text-base"
+                />
+                <label className="absolute left-11 top-2 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-warm-gray peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-xs md:peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-placeholder-shown:tracking-normal transition-all pointer-events-none">
+                  Education (Degree, University)
                 </label>
               </div>
             </div>
@@ -281,12 +329,39 @@ const Profile: React.FC = () => {
           <div className="glass p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] space-y-8 md:space-y-12 border border-white/40 shadow-xl shadow-charcoal/5">
             <div className="grid md:grid-cols-2 gap-8 md:gap-12">
               <div className="space-y-1 md:space-y-2 overflow-hidden">
-                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-warm-gray">Full Name</p>
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-warm-gray flex items-center gap-2">
+                  <User size={12} className="text-terracotta" />
+                  Full Name
+                </p>
                 <p className="text-xl md:text-2xl font-display text-charcoal break-words">{profile?.fullName || 'Not set'}</p>
               </div>
               <div className="space-y-1 md:space-y-2 overflow-hidden">
-                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-warm-gray">Email Address</p>
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-warm-gray flex items-center gap-2">
+                  <Mail size={12} className="text-terracotta" />
+                  Email Address
+                </p>
                 <p className="text-lg md:text-xl font-display text-charcoal/80 break-words">{profile?.email}</p>
+              </div>
+              <div className="space-y-1 md:space-y-2 overflow-hidden">
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-warm-gray flex items-center gap-2">
+                  <Phone size={12} className="text-terracotta" />
+                  Phone Number
+                </p>
+                <p className="text-lg md:text-xl font-display text-charcoal/80 break-words">{profile?.phone || 'Not set'}</p>
+              </div>
+              <div className="space-y-1 md:space-y-2 overflow-hidden">
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-warm-gray flex items-center gap-2">
+                  <MapPin size={12} className="text-terracotta" />
+                  Location
+                </p>
+                <p className="text-lg md:text-xl font-display text-charcoal/80 break-words">{profile?.location || 'Not set'}</p>
+              </div>
+              <div className="space-y-1 md:space-y-2 overflow-hidden md:col-span-2">
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-warm-gray flex items-center gap-2">
+                  <GraduationCap size={12} className="text-terracotta" />
+                  Education
+                </p>
+                <p className="text-lg md:text-xl font-display text-charcoal/80 break-words">{profile?.education || 'Not set'}</p>
               </div>
             </div>
 
