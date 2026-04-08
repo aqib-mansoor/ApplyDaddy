@@ -19,7 +19,10 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signInWithPopup, 
-  updateProfile 
+  updateProfile,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import { createUserProfile, getUserProfile } from '../services/userService';
@@ -38,11 +41,37 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+
+  const validateEmail = (emailStr: string) => {
+    return String(emailStr)
+      .toLowerCase()
+      .match(
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      );
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
     setLoading(true);
     try {
+      // Set persistence based on rememberMe
+      await setPersistence(
+        auth, 
+        rememberMe ? browserLocalPersistence : browserSessionPersistence
+      );
+
       if (mode === 'signup') {
         const { user } = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(user, { displayName: fullName });
@@ -70,6 +99,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
+      // Set persistence for Google Sign In as well
+      await setPersistence(
+        auth, 
+        rememberMe ? browserLocalPersistence : browserSessionPersistence
+      );
+      
       const { user } = await signInWithPopup(auth, googleProvider);
       
       // Check if profile exists before creating
@@ -256,6 +291,24 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
+                  </div>
+
+                  <div className="flex items-center justify-between px-1">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <div className="relative flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={rememberMe}
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                          className="peer appearance-none w-5 h-5 border-2 border-charcoal/10 rounded-lg checked:bg-terracotta checked:border-terracotta transition-all cursor-pointer"
+                        />
+                        <ShieldCheck 
+                          size={12} 
+                          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" 
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-warm-gray group-hover:text-charcoal transition-colors">Remember Me</span>
+                    </label>
                   </div>
 
                   <button
