@@ -24,6 +24,29 @@ function getAI() {
   return new GoogleGenAI({ apiKey: API_KEY });
 }
 
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2): Promise<T> {
+  let lastError: any;
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      const message = error.message || "";
+      const status = error.status || "";
+      const isTransient = message.includes("high demand") || message.includes("503") || status === "UNAVAILABLE" || message.includes("deadline exceeded");
+      
+      if (isTransient && i < maxRetries) {
+        const delay = Math.pow(2, i) * 1000; // Exponential backoff: 1s, 2s
+        console.warn(`Gemini transient error, retrying in ${delay}ms... (Attempt ${i + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
+}
+
 export async function generateResponse(
   jobPost: string,
   profile: UserProfile,
@@ -71,34 +94,49 @@ export async function generateResponse(
       }
     `;
 
-    const response = await ai.models.generateContent({
-      model,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            subject: { type: Type.STRING },
-            email: { type: Type.STRING },
-            whatsapp: { type: Type.STRING },
+    const result = await withRetry(async () => {
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              subject: { type: Type.STRING },
+              email: { type: Type.STRING },
+              whatsapp: { type: Type.STRING },
+            },
+            required: ["subject", "email", "whatsapp"],
           },
-          required: ["subject", "email", "whatsapp"],
         },
-      },
+      });
+      return response.text;
     });
 
-    return JSON.parse(response.text);
+    return JSON.parse(result);
   } catch (error: any) {
     console.error("Gemini Generation Error:", error);
     const message = error.message || "";
+    const status = error.status || "";
+    
+    if (message.includes("high demand") || message.includes("503") || status === "UNAVAILABLE") {
+      throw new Error("Daddy's AI is currently very busy helping others. Please wait a few seconds and try clicking 'Generate' again!");
+    }
+    
     if (message.includes("API key not valid") || message.includes("invalid API key") || message.includes("403") || message.includes("401")) {
       throw new Error("Invalid Gemini API Key. The key was found but rejected by Google. Please check if your key is restricted or create a NEW one in Google AI Studio.");
     }
     if (message.includes("API key is missing")) {
       throw new Error("Gemini API Key is missing. Please ensure GEMINI_API_KEY or VITE_GEMINI_API_KEY is set in your Vercel Environment Variables and REDEPLOY.");
     }
-    throw error;
+    
+    // If it's already a clean error message we threw, just rethrow it
+    if (typeof error === 'string') throw error;
+    if (error instanceof Error && !error.message.startsWith('{')) throw error;
+
+    // Fallback for raw JSON errors from the SDK
+    throw new Error("Daddy encountered a temporary glitch in the AI. Please try again in a moment.");
   }
 }
 
@@ -123,35 +161,46 @@ export async function extractJobMetadata(jobPost: string): Promise<{ company: st
       }
     `;
 
-    const response = await ai.models.generateContent({
-      model,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            company: { type: Type.STRING },
-            titles: { 
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
+    const result = await withRetry(async () => {
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              company: { type: Type.STRING },
+              titles: { 
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
+              },
             },
+            required: ["company", "titles"],
           },
-          required: ["company", "titles"],
         },
-      },
+      });
+      return response.text;
     });
 
-    return JSON.parse(response.text);
+    return JSON.parse(result);
   } catch (error: any) {
     console.error("Gemini Extraction Error:", error);
     const message = error.message || "";
+    const status = error.status || "";
+
+    if (message.includes("high demand") || message.includes("503") || status === "UNAVAILABLE") {
+      throw new Error("Daddy's AI is a bit overwhelmed right now. Please try 'Magic Fill' again in a few seconds.");
+    }
+
     if (message.includes("API key not valid") || message.includes("invalid API key") || message.includes("403") || message.includes("401")) {
       throw new Error("Invalid Gemini API Key. The key was found but rejected by Google. Please check if your key is restricted or create a NEW one in Google AI Studio.");
     }
     if (message.includes("API key is missing")) {
       throw new Error("Gemini API Key is missing. Please ensure GEMINI_API_KEY or VITE_GEMINI_API_KEY is set in your Vercel Environment Variables and REDEPLOY.");
     }
-    throw error;
+    
+    // Fallback
+    throw new Error("Magic Fill encountered a temporary issue. Please try again or fill the fields manually.");
   }
 }
